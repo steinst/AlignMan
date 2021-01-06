@@ -19,12 +19,13 @@ python3 primeDB.py --input-file examples/sentences.txt
 
 
 The input file should be a list of aligned sentences, separated by a tab. The sentences should ideally be tokenized.:
-`What can I order for you ?    Hvað get ég pantað handa ykkur ?`
+```
+What can I order for you ?    Hvað get ég pantað handa ykkur ?
 
-`I 'll have one of those .    Ég þigg einn svoleiðis .`
+I 'll have one of those .    Ég þigg einn svoleiðis .
 
-`What are you worrying about ?    Hvaða áhyggjur eru þetta ?`
-
+What are you worrying about ?    Hvaða áhyggjur eru þetta ?
+```
 
 An example file is included, `examples/sentences.txt`. 
 	
