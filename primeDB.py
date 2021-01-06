@@ -2,9 +2,7 @@ import sqlite3
 import argparse
 import csv
 from os import path
-import tokenize_functions
-
-#Bæta við möguleika fyrir annan notanda og sure/probable
+from utilities import tokenize_functions
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input-file', '-i', help="File with aligned sentences")

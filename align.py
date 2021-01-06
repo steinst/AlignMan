@@ -3,9 +3,6 @@ from tkinter import messagebox
 import argparse
 import sqlite3
 import sys
-import urllib
-
-
 
 # setja cancel í laga texta reitinn
 # Setja fídus sem getur lesið inn alignments svo hægt sé að skoða þau
@@ -396,11 +393,11 @@ def onObjectClick(event):
     print(canvas.bbox(temp_num))
 
     if (lastClickedSrc == None) or (src == lastClickedSrc):
-        print('fyrsta')
+        print('first')
         lastClickedId = id
         lastClickedSrc = src
     else:
-        print('annað')
+        print('other')
         updateConnections(id, src, obj)
 
 
@@ -599,9 +596,9 @@ def go_to_page(event, page_num):
         alignmentID, src_sent_txt, trg_sent_txt, conns_txt = select_alignment(page_num, False)
         setupAlignments(alignmentID, src_sent_txt, trg_sent_txt, conns_txt)
     elif page_num < min_page:
-        messagebox.showinfo("Kemst ekki", "Er á fremstu síðu.")
+        messagebox.showinfo("Not possible", "Is on first sentence.")
     else:
-        messagebox.showinfo("Kemst ekki", "Er á öftustu síðu.")
+        messagebox.showinfo("Not possible", "Is on last sentence.")
 
 
 def editSentence(event):

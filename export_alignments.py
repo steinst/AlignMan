@@ -1,6 +1,5 @@
 import sqlite3
 import argparse
-import csv
 import sys
 from os import path
 
@@ -62,10 +61,10 @@ def return_sentences(ids, format, source):
     info_out = ''
     for lina in c.fetchall():
         if lina[0] in ids:
-            if format=='text':
+            if format == 'text':
                 src_text_out += str(lina[0]) + '\t' + lina[1] + '\n'
                 trg_text_out += str(lina[0]) + '\t' + lina[2] + '\n'
-            elif format=='markup':
+            elif format == 'markup':
                 src_text_out += '<s snum=' + str(lina[0]) + '>' + lina[1] + '</s>\n'
                 trg_text_out += '<s snum=' + str(lina[0]) + '>' + lina[2] + '</s>\n'
             elif format == 'fa':
@@ -86,7 +85,7 @@ def return_alignments(ids, format, source):
     info_out = ''
     for lina in c.fetchall():
         if lina[0] in ids:
-            # laga röðunina, nú er þessu raðað eins og string
+            #TODO: fix order, this is now ordered as a string
             print(sorted(lina[1].strip().split()))
             alignments_ordered = ' '.join(sorted(lina[1].strip().split()))
             if format=='pharaoh':
