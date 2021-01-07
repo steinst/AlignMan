@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
+import tkinter as tk
 import argparse
 import sqlite3
 import sys
@@ -9,58 +10,6 @@ import sys
 # setja fídus til að bera saman alignments - birta tvö hlið við hlið og hafa sameiginleg í öðrum lit en þau sem eru stök
 # skoða athugasemdir Hjalta og bregðast við þeim
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--db-name', help="DB name", default='alignments.db')
-parser.add_argument('--user', '-u', default=1, choices=['1', '2'])
-args = parser.parse_args()
-
-try:
-    conn = sqlite3.connect(args.db_name)
-    c = conn.cursor()
-except:
-    print("Can't connect to database! Exiting...")
-    sys.exit(0)
-
-user = args.user
-
-root = Tk()
-frame = Frame(root, bd=2, relief=SUNKEN)
-frame.grid_rowconfigure(0, weight=1)
-frame.grid_columnconfigure(0, weight=1)
-xscroll = Scrollbar(frame, orient=HORIZONTAL)
-xscroll.grid(row=2, column=0, sticky=E + W)
-yscroll = Scrollbar(frame)
-yscroll.grid(row=1, column=1, sticky=N + S)
-frame.pack(fill=BOTH, expand=1)
-
-infoframe = Canvas(frame, bd=0)
-infoframe.grid(row=0, column=0, sticky=N + S + E + W)
-infoframe.configure(width=1200, height=50)
-canvas = Canvas(frame, bd=0, xscrollcommand=xscroll.set, yscrollcommand=yscroll.set)
-canvas.grid(row=1, column=0, sticky=N + S + E + W)
-canvas.configure(width=1200, height=350)
-xscroll.config(command=canvas.xview)
-yscroll.config(command=canvas.yview)
-
-tl1 = StringVar()
-tl2 = StringVar()
-tl3 = StringVar()
-tl4 = StringVar()
-test_label1 = Label(infoframe, textvariable=tl1)
-test_label1.grid(row=0, column=0, sticky=W)
-test_label4 = Label(infoframe, textvariable=tl4)
-test_label4.grid(row=0, column=1, padx=75, sticky=W)
-test_label2 = Label(infoframe, textvariable=tl2)
-test_label2.grid(row=1, column=0, sticky=W)
-test_label3 = Label(infoframe, textvariable=tl3)
-test_label3.grid(row=1, column=1, padx=75, sticky=W)
-
-wordBoxes = {}
-lastClickedId = None
-lastClickedSrc = None
-connections = []
-connecting_lines = {}
-current_pair_id = 0
 
 class EditSentence:
     def __init__(self, canvas):
@@ -69,9 +18,6 @@ class EditSentence:
 
         self.board = Toplevel()
         self.board.title("Edit sentences")
-
-        #board.grid(row=5, column=3, sticky=N + S + E + W)
-        #board.configure(width=200, height=25)
 
         self.sentSrcText = Entry(self.board, font=('Arial', 16), width=200)
         self.sentSrcText.grid(row=1, column=1)
@@ -158,6 +104,191 @@ class WordBox:
         else:
             self.connections.append(no)
             return True
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--db-name', help="DB name", default='alignments.db')
+parser.add_argument('--user', '-u', default=1, choices=['1', '2'])
+args = parser.parse_args()
+
+try:
+    conn = sqlite3.connect(args.db_name)
+    c = conn.cursor()
+except:
+    print("Can't connect to database! Exiting...")
+    sys.exit(0)
+
+user = args.user
+
+canvasWidth = 1200
+canvasHeight = 250
+
+
+def editSentence(event):
+    sent_fix = EditSentence(canvas)
+
+
+def writeAlignments(event = ''):
+    global user
+    global connections
+    global current_pair_id
+
+    connections_txt = ""
+    for connection in connections:
+        connections_txt += connection + ' '
+    connections_txt = connections_txt.strip()
+
+    try:
+        sql_string = "UPDATE ALIGNMENTS SET alignments_u{} = '{}' WHERE id = {}".format(str(user), str(connections_txt), str(current_pair_id))
+        c.execute(sql_string)
+        conn.commit()
+        messagebox.showinfo("Saved", "Word alignments saved")
+    except Exception as e:
+        print('(Write alignments error)')
+        print(e)
+        sys.exit(1)
+
+
+
+def toggleDone(event):
+    global user
+    global current_pair_id
+    try:
+        status_text = ""
+        c.execute("SELECT done{} FROM alignments WHERE id = {}".format(str(user), str(current_pair_id)))
+        done_status = c.fetchone()[0]
+        if done_status == 0:
+            sql_string = "UPDATE ALIGNMENTS SET done{} = 1 WHERE id = {}".format(str(user), str(current_pair_id))
+            status_text = "DONE"
+        else:
+            sql_string = "UPDATE ALIGNMENTS SET done{} = 0 WHERE id = {}".format(str(user), str(current_pair_id))
+            status_text = "NOT DONE"
+        c.execute(sql_string)
+        conn.commit()
+        messagebox.showinfo("Status Change", "Alignment status now set to: " + status_text)
+        tl4.set('Status: ' + status_text)
+    except Exception as e:
+        print('(Toggle status error)')
+        print(e)
+        sys.exit(1)
+
+
+def toggleDiscardAlignment(event):
+    global user
+    global current_pair_id
+    try:
+        #status_text = ""
+        #c.execute("SELECT done{} FROM alignments WHERE id = {}".format(str(user), str(current_pair_id)))
+        #done_status = c.fetchone()[0]
+        print()
+        sql_string = "UPDATE ALIGNMENTS SET discard = 1 WHERE id = {}".format(str(current_pair_id))
+        #status_text = "Discarded"
+        c.execute(sql_string)
+        conn.commit()
+        messagebox.showinfo("Status Change", "Pair Discarded")
+        tl4.set('Status: Discarded')
+    except Exception as e:
+        print('(Toggle status error)')
+        print(e)
+        sys.exit(1)
+
+
+def toggleUndiscardAlignment(event):
+    global user
+    global current_pair_id
+    try:
+        status_text = ""
+        c.execute("SELECT done{} FROM alignments WHERE id = {}".format(str(user), str(current_pair_id)))
+        done_status = c.fetchone()[0]
+        sql_string = "UPDATE ALIGNMENTS SET discard = 0 WHERE id = {}".format(str(current_pair_id))
+        status_text = "NOT DONE"
+        c.execute(sql_string)
+        conn.commit()
+        messagebox.showinfo("Status Change", "Pair Uniscarded")
+        tl4.set('Status: ' + status_text)
+    except Exception as e:
+        print('(Toggle status error)')
+        print(e)
+        sys.exit(1)
+
+
+def finishPair(event = ''):
+    global user
+    global current_pair_id
+
+    try:
+        writeAlignments(event)
+        sql_string = "UPDATE ALIGNMENTS SET done{} = 1 WHERE id = {}".format(str(user), str(current_pair_id))
+        c.execute(sql_string)
+        conn.commit()
+        messagebox.showinfo("Next pair", "Moving on to next pair.")
+        canvas.delete("all")
+        writeConfidence(current_pair_id)
+        alignmentID, src_sent_txt, trg_sent_txt, conns_txt = select_alignment(current_pair_id)
+        setupAlignments(alignmentID, src_sent_txt, trg_sent_txt, conns_txt)
+    except Exception as e:
+        print('(Finish pair error)')
+        print(e)
+        sys.exit(1)
+
+
+root = Tk()
+frame = Frame(root, bd=2, relief=SUNKEN)
+frame.grid_rowconfigure(0, weight=1)
+frame.grid_columnconfigure(0, weight=1)
+xscroll = Scrollbar(frame, orient=HORIZONTAL)
+xscroll.grid(row=2, column=0, sticky=E + W)
+yscroll = Scrollbar(frame)
+yscroll.grid(row=1, column=1, sticky=N + S)
+frame.pack(fill=BOTH, expand=1)
+
+infoframe = Canvas(frame, bd=0)
+infoframe.grid(row=0, column=0, sticky=N + S + E + W)
+infoframe.configure(width=1200, height=50)
+canvas = Canvas(frame, bd=0, xscrollcommand=xscroll.set, yscrollcommand=yscroll.set)
+canvas.grid(row=1, column=0, sticky=N + S + E + W)
+canvas.configure(width=canvasWidth, height=canvasHeight, scrollregion=canvas.bbox("all"))
+xscroll.config(command=canvas.xview)
+yscroll.config(command=canvas.yview)
+controlframe = Canvas(frame, bd=0)
+controlframe.grid(row=3, column=0, sticky=N + S + E + W)
+controlframe.config(background="white")
+controlframe.configure(width=1200, height=100)
+press_w = tk.Button(controlframe, text="Edit Sentence (w)", width=20, command=editSentence)
+press_w.grid(row=4, column=0)
+press_s = tk.Button(controlframe, text="Save (s)", width=20, command=writeAlignments)
+press_s.grid(row=4, column=2)
+press_f = tk.Button(controlframe, text="Finish Pair (f)", width=20, command=finishPair)
+press_f.grid(row=4, column=3, sticky=W)
+press_d = tk.Button(controlframe, text="Done/Not Done (d)", width=20, command=toggleDone)
+press_d.grid(row=4, column=4, sticky=W)
+press_x = tk.Button(controlframe, text="Discard (x)", width=20, command=toggleDiscardAlignment)
+press_x.grid(row=4, column=5, sticky=E)
+press_z = tk.Button(controlframe, text="Undiscard (z)", width=20, command=toggleUndiscardAlignment)
+press_z.grid(row=4, column=6, sticky=E)
+
+#Button(self.board, text='Update sentences', command=self.update_sentences)
+#        updateButton.grid(row=4, column=1)
+
+tl1 = StringVar()
+tl2 = StringVar()
+tl3 = StringVar()
+tl4 = StringVar()
+test_label1 = Label(infoframe, textvariable=tl1)
+test_label1.grid(row=0, column=0, sticky=W)
+test_label4 = Label(infoframe, textvariable=tl4)
+test_label4.grid(row=0, column=1, padx=75, sticky=W)
+test_label2 = Label(infoframe, textvariable=tl2)
+test_label2.grid(row=1, column=0, sticky=W)
+test_label3 = Label(infoframe, textvariable=tl3)
+test_label3.grid(row=1, column=1, padx=75, sticky=W)
+
+wordBoxes = {}
+lastClickedId = None
+lastClickedSrc = None
+connections = []
+connecting_lines = {}
+current_pair_id = 0
 
 
 def get_info(current_id):
@@ -276,7 +407,7 @@ def insert_sentences(sent1, sent2, conns_txt):
         src_ids.append(currWord.id)
 
         currWidth = canvas.bbox(currWord.id)[2] - canvas.bbox(currWord.id)[0]
-        sent1_width += currWidth + buffer
+        sent1_width += currWidth + (buffer*2)
         currYBound = canvas.bbox(currWord.id)[3]
         currWord.setXSize(currWidth)
         startX += buffer + currWidth / 2
@@ -287,7 +418,6 @@ def insert_sentences(sent1, sent2, conns_txt):
         currWord.calcYConnectionPoint(currYBound,0)
         canvas.tag_bind(currWord.id, '<Button-1>', onObjectClick)
         orderCnt += 1
-    sent1_width = sent1_width - buffer
 
 
 
@@ -306,6 +436,7 @@ def insert_sentences(sent1, sent2, conns_txt):
         trg_ids.append(currWord.id)
 
         currWidth = canvas.bbox(currWord.id)[2] - canvas.bbox(currWord.id)[0]
+        sent2_width = currWidth + (buffer*2)
         currYBound = canvas.bbox(currWord.id)[1]
         currWord.setXSize(currWidth)
         startX += buffer + currWidth / 2
@@ -317,6 +448,13 @@ def insert_sentences(sent1, sent2, conns_txt):
 
         canvas.tag_bind(currWord.id, '<Button-1>', onObjectClick)
         orderCnt += 1
+
+    if sent1_width > sent2_width:
+        scrollwidth = sent1_width
+    else:
+        scrollwidth = sent2_width
+
+    canvas.configure(width=canvasWidth, height=canvasHeight, scrollregion=(0, 0, scrollwidth, canvasHeight))
 
     try:
         connections = []
@@ -381,7 +519,11 @@ def onObjectClick(event):
     global lastClickedSrc
     global wordBoxes
 
-    temp_num = event.widget.find_closest(event.x, event.y)[0]
+    canvas = event.widget
+    x = canvas.canvasx(event.x)
+    y = canvas.canvasy(event.y)
+
+    temp_num = event.widget.find_closest(x, y)[0]
     print(temp_num)
     try:
         obj = wordBoxes[temp_num]
@@ -399,27 +541,6 @@ def onObjectClick(event):
     else:
         print('other')
         updateConnections(id, src, obj)
-
-
-def writeAlignments(event):
-    global user
-    global connections
-    global current_pair_id
-
-    connections_txt = ""
-    for connection in connections:
-        connections_txt += connection + ' '
-    connections_txt = connections_txt.strip()
-
-    try:
-        sql_string = "UPDATE ALIGNMENTS SET alignments_u{} = '{}' WHERE id = {}".format(str(user), str(connections_txt), str(current_pair_id))
-        c.execute(sql_string)
-        conn.commit()
-        messagebox.showinfo("Saved", "Word alignments saved")
-    except Exception as e:
-        print('(Write alignments error)')
-        print(e)
-        sys.exit(1)
 
 
 def writeConfidence(current_pair_id):
@@ -490,93 +611,12 @@ def writeConfidence(current_pair_id):
             print(e)
 
 
-def finishPair(event):
-    global user
-    global current_pair_id
-
-    try:
-        writeAlignments(event)
-        sql_string = "UPDATE ALIGNMENTS SET done{} = 1 WHERE id = {}".format(str(user), str(current_pair_id))
-        c.execute(sql_string)
-        conn.commit()
-        messagebox.showinfo("Next pair", "Moving on to next pair.")
-        canvas.delete("all")
-        writeConfidence(current_pair_id)
-        alignmentID, src_sent_txt, trg_sent_txt, conns_txt = select_alignment(current_pair_id)
-        setupAlignments(alignmentID, src_sent_txt, trg_sent_txt, conns_txt)
-    except Exception as e:
-        print('(Finish pair error)')
-        print(e)
-        sys.exit(1)
-
-
 def updateCanvas():
     global current_pair_id
     canvas.delete("all")
     alignmentID, src_sent_txt, trg_sent_txt, conns_txt = select_alignment(current_pair_id)
     setupAlignments(alignmentID, src_sent_txt, trg_sent_txt, conns_txt)
 
-
-def toggleDone(event):
-    global user
-    global current_pair_id
-    try:
-        status_text = ""
-        c.execute("SELECT done{} FROM alignments WHERE id = {}".format(str(user), str(current_pair_id)))
-        done_status = c.fetchone()[0]
-        if done_status == 0:
-            sql_string = "UPDATE ALIGNMENTS SET done{} = 1 WHERE id = {}".format(str(user), str(current_pair_id))
-            status_text = "DONE"
-        else:
-            sql_string = "UPDATE ALIGNMENTS SET done{} = 0 WHERE id = {}".format(str(user), str(current_pair_id))
-            status_text = "NOT DONE"
-        c.execute(sql_string)
-        conn.commit()
-        messagebox.showinfo("Status Change", "Alignment status now set to: " + status_text)
-        tl4.set('Status: ' + status_text)
-    except Exception as e:
-        print('(Toggle status error)')
-        print(e)
-        sys.exit(1)
-
-
-def toggleDiscardAlignment(event):
-    global user
-    global current_pair_id
-    try:
-        #status_text = ""
-        #c.execute("SELECT done{} FROM alignments WHERE id = {}".format(str(user), str(current_pair_id)))
-        #done_status = c.fetchone()[0]
-        print()
-        sql_string = "UPDATE ALIGNMENTS SET discard = 1 WHERE id = {}".format(str(current_pair_id))
-        #status_text = "Discarded"
-        c.execute(sql_string)
-        conn.commit()
-        messagebox.showinfo("Status Change", "Pair Discarded")
-        tl4.set('Status: Discarded')
-    except Exception as e:
-        print('(Toggle status error)')
-        print(e)
-        sys.exit(1)
-
-
-def toggleUndiscardAlignment(event):
-    global user
-    global current_pair_id
-    try:
-        status_text = ""
-        c.execute("SELECT done{} FROM alignments WHERE id = {}".format(str(user), str(current_pair_id)))
-        done_status = c.fetchone()[0]
-        sql_string = "UPDATE ALIGNMENTS SET discard = 0 WHERE id = {}".format(str(current_pair_id))
-        status_text = "NOT DONE"
-        c.execute(sql_string)
-        conn.commit()
-        messagebox.showinfo("Status Change", "Pair Uniscarded")
-        tl4.set('Status: ' + status_text)
-    except Exception as e:
-        print('(Toggle status error)')
-        print(e)
-        sys.exit(1)
 
 
 def go_to_page(event, page_num):
@@ -600,9 +640,6 @@ def go_to_page(event, page_num):
     else:
         messagebox.showinfo("Not possible", "Is on last sentence.")
 
-
-def editSentence(event):
-    sent_fix = EditSentence(canvas)
 
 
 def bind_functions():

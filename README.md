@@ -53,8 +53,8 @@ python3 export_alignments.py --alignments
 
 It is possible to export the alignments in two different formats by adding the parameter `--alignment-format`:
 
-| 'classic' (default) | Alignments are exported as ... |
-| 'pharaoh' | Alignments are exported as ... |
+| classic (default) | Alignments are exported as ... |
+| pharaoh | Alignments are exported as ... |
 
 Examples of both export formats are available in the `examples` folder.
 
