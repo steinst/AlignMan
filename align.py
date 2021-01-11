@@ -310,7 +310,7 @@ def get_info(current_id):
     return alignments_left, alignments_finished, alignments_total, alignments_order, alignment_done
 
 
-def select_alignment(alignment_no = 0, notDone=True):
+def select_alignment(alignment_no = 0, notDone=True, direction = 'none'):
     global user
     try:
         if notDone:
@@ -321,7 +321,12 @@ def select_alignment(alignment_no = 0, notDone=True):
                 c.execute("select max(id) from alignments where discard is not 1 and done{} < 2".format(str(user)))
                 working_id = c.fetchone()[0]
         else:
-            c.execute("select min(id) from alignments where id >= {}".format(str(alignment_no)))
+            if direction == 'prev':
+                c.execute("select max(id) from alignments where id < {}".format(str(alignment_no)))
+            elif direction == 'next':
+                c.execute("select min(id) from alignments where id > {}".format(str(alignment_no)))
+            else:
+                c.execute("select min(id) from alignments where id >= {}".format(str(alignment_no)))
             working_id = c.fetchone()[0]
 
         if working_id == None:
@@ -619,7 +624,7 @@ def updateCanvas():
 
 
 
-def go_to_page(event, page_num):
+def go_to_page(event, page_num, direction = 'next'):
     db_string = "select min(id) from ALIGNMENTS"
     cur = conn.cursor()
     cur.execute(db_string)
@@ -630,15 +635,16 @@ def go_to_page(event, page_num):
     cur.execute(db_string)
     max_page = cur.fetchone()[0]
 
-    if max_page >= page_num >= min_page:
-        print("Going to", page_num)
-        canvas.delete("all")
-        alignmentID, src_sent_txt, trg_sent_txt, conns_txt = select_alignment(page_num, False)
-        setupAlignments(alignmentID, src_sent_txt, trg_sent_txt, conns_txt)
-    elif page_num < min_page:
+    if (max_page == page_num) and (direction == 'next'):
+        messagebox.showinfo("Not possible", "Is on last sentence.")
+    elif (page_num == min_page) and (direction == 'prev'):
         messagebox.showinfo("Not possible", "Is on first sentence.")
     else:
-        messagebox.showinfo("Not possible", "Is on last sentence.")
+        print("Going to", page_num)
+        canvas.delete("all")
+        alignmentID, src_sent_txt, trg_sent_txt, conns_txt = select_alignment(page_num, False, direction)
+        setupAlignments(alignmentID, src_sent_txt, trg_sent_txt, conns_txt)
+
 
 
 
@@ -648,10 +654,10 @@ def bind_functions():
 
     try:
         canvas.bind("<KeyPress-s>", writeAlignments)
-        canvas.bind("<KeyPress-o>", lambda event: go_to_page(event, current_pair_id-1))
-        canvas.bind("<Left>", lambda event: go_to_page(event, current_pair_id-1))
-        canvas.bind("<KeyPress-p>", lambda event: go_to_page(event, current_pair_id+1))
-        canvas.bind("<Right>", lambda event: go_to_page(event, current_pair_id+1))
+        canvas.bind("<KeyPress-o>", lambda event: go_to_page(event, current_pair_id, 'prev'))
+        canvas.bind("<Left>", lambda event: go_to_page(event, current_pair_id, 'prev'))
+        canvas.bind("<KeyPress-p>", lambda event: go_to_page(event, current_pair_id, 'next'))
+        canvas.bind("<Right>", lambda event: go_to_page(event, current_pair_id, 'next'))
         canvas.bind("<KeyPress-f>", finishPair)
         canvas.bind("<KeyPress-d>", toggleDone)
         canvas.bind("<KeyPress-x>", toggleDiscardAlignment)
