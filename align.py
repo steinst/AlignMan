@@ -233,6 +233,7 @@ def finishPair(event = ''):
 
 
 root = Tk()
+root.title("AlignMan")
 frame = Frame(root, bd=2, relief=SUNKEN)
 frame.grid_rowconfigure(0, weight=1)
 frame.grid_columnconfigure(0, weight=1)
@@ -241,6 +242,7 @@ xscroll.grid(row=2, column=0, sticky=E + W)
 yscroll = Scrollbar(frame)
 yscroll.grid(row=1, column=1, sticky=N + S)
 frame.pack(fill=BOTH, expand=1)
+
 
 infoframe = Canvas(frame, bd=0)
 infoframe.grid(row=0, column=0, sticky=N + S + E + W)
@@ -261,11 +263,11 @@ press_s.grid(row=4, column=2)
 press_f = tk.Button(controlframe, text="Finish Pair (f)", width=20, command=finishPair)
 press_f.grid(row=4, column=3, sticky=W)
 press_d = tk.Button(controlframe, text="Done/Not Done (d)", width=20, command=toggleDone)
-press_d.grid(row=4, column=4, sticky=W)
+press_d.grid(row=5, column=0, sticky=W)
 press_x = tk.Button(controlframe, text="Discard (x)", width=20, command=toggleDiscardAlignment)
-press_x.grid(row=4, column=5, sticky=E)
+press_x.grid(row=5, column=2, sticky=E)
 press_z = tk.Button(controlframe, text="Undiscard (z)", width=20, command=toggleUndiscardAlignment)
-press_z.grid(row=4, column=6, sticky=E)
+press_z.grid(row=5, column=3, sticky=E)
 
 #Button(self.board, text='Update sentences', command=self.update_sentences)
 #        updateButton.grid(row=4, column=1)
