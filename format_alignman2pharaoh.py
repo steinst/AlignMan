@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-import spacy
 import sys
 
 src_file = sys.argv[1]

@@ -85,7 +85,6 @@ def return_alignments(ids, format, source):
     info_out = ''
     for lina in c.fetchall():
         if lina[0] in ids:
-            #TODO: fix order, this is now ordered as a string
             print(sorted(lina[1].strip().split()))
             alignments_ordered = ' '.join(sorted(lina[1].strip().split()))
             if format=='pharaoh':

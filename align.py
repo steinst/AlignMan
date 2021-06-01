@@ -5,11 +5,6 @@ import argparse
 import sqlite3
 import sys
 
-# setja cancel í laga texta reitinn
-# Setja fídus sem getur lesið inn alignments svo hægt sé að skoða þau
-# setja fídus til að bera saman alignments - birta tvö hlið við hlið og hafa sameiginleg í öðrum lit en þau sem eru stök
-# skoða athugasemdir Hjalta og bregðast við þeim
-
 
 class EditSentence:
     def __init__(self, canvas):
