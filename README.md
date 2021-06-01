@@ -41,10 +41,6 @@ python3 align.py
 
 The tool can be run for one user by running the file without any parameters. By using the `--user` parameter a second user can be selected. The users then align the sentences separately and when both have finished a sentence the alignments are rated as `sure` or `possible`. All alignments that both evaluators set as 1-to-1 are tagged `sure`. Other alignments, the ones that only one evaluator creates or if one or both create 1-to-many, many-to-1 or many-to-many, they are tagged as `possible`.
 
-How to use the tool:
-
-... instructions...
-
 
 #### Export manual alignments
 ```
@@ -59,6 +55,21 @@ It is possible to export the alignments in two different formats by adding the p
 Examples of both export formats are available in the `examples` folder.
 
 This script can also export the sentences that were aligned by using the `--sentences` flag. For other options, run `python3 export_alignments.py -h`.
+
+Citation
+-------
+If you use AlignMan for published research, please cite the paper:
+```
+@inproceedings{combalign-nodalida2021,
+  author    = {Steingrímsson, Steinþór  and  Loftsson, Hrafn  and  Way, Andy},
+  title     = {CombAlign: a Tool for Obtaining High-Quality Word Alignments},
+  booktitle = {Proceedings of the 23rd Nordic Conference on Computational Linguistics},
+  month     = {June},
+  year      = {2021},
+  address   = {Online},
+  publisher = {Link{\"o}ping University Electronic Press},
+}
+```
 
 License
 -------
